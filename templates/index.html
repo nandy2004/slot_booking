@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Slot Booking System</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f6f2;
+      color: #2c1a0e;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4a2c1a, #7a4a2e);
+      color: white;
+      padding: 30px 40px;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(74,44,26,0.4);
+    }
+    header h1 { font-size: 30px; letter-spacing: 0.5px; }
+    header p  { font-size: 14px; opacity: 0.85; margin-top: 6px; }
+
+    .container { max-width: 1100px; margin: 36px auto; padding: 0 24px; }
+
+    .section {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 18px rgba(74,44,26,0.08);
+      border: 1px solid #e8d5c4;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #4a2c1a;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #e8d5c4;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      border: 2px solid #e8d5c4;
+      background: #fdf8f4;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(74,44,26,0.12);
+    }
+
+    .card.booked-card {
+      border-color: #c8a882;
+      background: #fdf4ec;
+    }
+
+    .slot-time {
+      font-size: 15px;
+      font-weight: 700;
+      color: #4a2c1a;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .badge.available { background: #e8d5c4; color: #4a2c1a; }
+    .badge.booked    { background: #c8a882; color: #2c1a0e; }
+
+    .booked-info {
+      font-size: 13px;
+      color: #7a5c44;
+      line-height: 1.8;
+      margin-bottom: 14px;
+    }
+    .booked-info strong { color: #4a2c1a; }
+
+    .empty {
+      text-align: center;
+      color: #b09880;
+      font-size: 14px;
+      padding: 20px 0;
+      grid-column: 1 / -1;
+    }
+
+    .book-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 18px;
+      align-items: end;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #4a2c1a;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    select, input[type="text"] {
+      padding: 11px 14px;
+      border: 2px solid #e8d5c4;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #fdf8f4;
+      color: #2c1a0e;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    select:focus, input[type="text"]:focus {
+      border-color: #7a4a2e;
+      background: #ffffff;
+    }
+
+    .btn-book {
+      padding: 11px 32px;
+      background: linear-gradient(135deg, #4a2c1a, #7a4a2e);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(74,44,26,0.3);
+    }
+    .btn-book:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .btn-cancel {
+      padding: 7px 18px;
+      background: white;
+      color: #7a4a2e;
+      border: 2px solid #c8a882;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-cancel:hover { background: #4a2c1a; color: white; border-color: #4a2c1a; }
+
+    @media (max-width: 640px) {
+      .book-form { grid-template-columns: 1fr; }
+    }
+
+    footer {
+      text-align: center;
+      padding: 26px;
+      font-size: 13px;
+      color: #b09880;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📅 Slot Booking System</h1>
+  <p>Manage and book your time slots easily</p>
+</header>
+
+<div class="container">
+
+  <!-- SECTION 1: AVAILABLE SLOTS -->
+  <div class="section">
+    <div class="section-title">🟤 Available Slots</div>
+    <div class="grid">
+      {% set available = slots | selectattr("is_booked", "equalto", false) | list %}
+      {% if available %}
+        {% for slot in available %}
+        <div class="card">
+          <div class="slot-time">🕐 {{ slot.slot_time }}</div>
+          <span class="badge available">Available</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">😕 No available slots at the moment.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- SECTION 2: BOOK A SLOT -->
+  <div class="section">
+    <div class="section-title">📝 Book a Slot</div>
+    <form action="/book" method="post">
+      <div class="book-form">
+        <div class="form-group">
+          <label for="slot_id">Select a Slot</label>
+          <select name="slot_id" id="slot_id" required>
+            <option value="" disabled selected>-- Choose a time slot --</option>
+            {% for slot in slots %}
+              {% if not slot.is_booked %}
+                <option value="{{ slot.id }}">{{ slot.slot_time }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="name">Your Name</label>
+          <input type="text" id="name" name="name" placeholder="Enter your name" required />
+        </div>
+        <button class="btn-book" type="submit">Book Now</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- SECTION 3: BOOKED SLOTS -->
+  <div class="section">
+    <div class="section-title">📌 Booked Slots</div>
+    <div class="grid">
+      {% set booked = slots | selectattr("is_booked", "equalto", true) | list %}
+      {% if booked %}
+        {% for slot in booked %}
+        <div class="card booked-card">
+          <div class="slot-time">🕐 {{ slot.slot_time }}</div>
+          <span class="badge booked">Booked</span>
+          <div class="booked-info">
+            <strong>{{ slot.booked_by }}</strong><br/>
+            {{ slot.booked_at.strftime('%d %b %Y, %I:%M %p') if slot.booked_at }}
+          </div>
+          <form action="/cancel/{{ slot.id }}" method="post">
+            <button class="btn-cancel" type="submit">Cancel</button>
+          </form>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">✅ No slots are booked yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<footer>Slot Booking System &copy; 2025 — All rights reserved</footer>
+
+</body>
+</html>
